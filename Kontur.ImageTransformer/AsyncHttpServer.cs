@@ -90,8 +90,8 @@ namespace Kontur.ImageTransformer
         private async Task HandleContextAsync(HttpListenerContext listenerContext)
         {
 
-            Console.WriteLine("request");
-            Handler handler = new Handler();
+            Console.WriteLine("request received");
+            Handler handler = Handler.GetInstance();
             handler.Handle(listenerContext);
         }
 
@@ -100,5 +100,6 @@ namespace Kontur.ImageTransformer
         private Thread listenerThread;
         private bool disposed;
         private volatile bool isRunning;
+        
     }
 }
