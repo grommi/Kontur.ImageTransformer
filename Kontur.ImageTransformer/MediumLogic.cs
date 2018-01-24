@@ -7,38 +7,38 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace Kontur.ImageTransformer
 {
     class MediumLogic : IHandlerLogic
     {
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int HandleGrayscale(int x, int y, int w, int h, HttpListenerContext listenerContext)
-        {
-            int intensity;
-            filter grayscale = c => Color.FromArgb(c.A, intensity = (c.R + c.G + c.B) / 3, intensity, intensity);
-            return handleWithFilter(x, y, w, h, listenerContext, grayscale);
+        {            
+            link grayscale = (r, g, b) => (byte)((r + g+ b) / 3);
+            return handleWithFilter(x, y, w, h, listenerContext, grayscale, grayscale, grayscale,true);
         }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int HandleSepia(int x, int y, int w, int h, HttpListenerContext listenerContext)
         {
-            link newR = c => Math.Min((int)((c.R * .393) + (c.G * .769) + (c.B * .189)), 255);
-            link newG = c => Math.Min((int)((c.R * .349) + (c.G * .686) + (c.B * .168)), 255);
-            link newB = c => Math.Min((int)((c.R * .272) + (c.G * .534) + (c.B * .131)), 255);
-            filter sepia = c => Color.FromArgb(c.A, newR(c), newG(c), newB(c));
-            return handleWithFilter(x, y, w, h, listenerContext, sepia);
+            link newR = (r ,g, b) => (byte)Math.Min((int)((r * .393) + (g * .769) + (b * .189)), 255);
+            link newG = (r, g, b) => (byte)Math.Min((int)((r * .349) + (g * .686) + (b * .168)), 255); 
+            link newB = (r, g, b) => (byte)Math.Min((int)((r * .272) + (g * .534) + (b * .131)), 255); 
+            
+            return handleWithFilter(x, y, w, h, listenerContext, newR,newG,newB,false);
         }
 
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int HandleThreshold(int x, int y, int w, int h, int thresholdValue, HttpListenerContext listenerContext)
-        {
-            Console.WriteLine(thresholdValue);
-            int newRGB;
-            filter threshold = c => Color.FromArgb(c.A, newRGB = ((c.R + c.G + c.B) / 3 >= (255 * thresholdValue / 100)) ? 255 : 0, newRGB, newRGB);
-            return handleWithFilter(x, y, w, h, listenerContext, threshold);
+        {           
+            
+            link threshold = (r, g, b) =>  (byte)(((r + g + b) / 3 >= (255 * thresholdValue / 100)) ? 255 : 0);
+            return handleWithFilter(x, y, w, h, listenerContext, threshold, threshold, threshold,true);
 
         }
-        private int handleWithFilter(int x, int y, int w, int h, HttpListenerContext listenerContext, filter filtr)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int handleWithFilter(int x, int y, int w, int h, HttpListenerContext listenerContext, link redLink,link greenLink,link blueLink,bool isBlackAndWhite)
         {
             
             Bitmap bmp;
@@ -73,15 +73,19 @@ namespace Kontur.ImageTransformer
                 Marshal.Copy(bd.Scan0, buffer, 0, buffer.Length);
                 
                 int l = buffer.Length >> 2;
-                for (int i = 0; i < l; i++)
-                {
-                    Color c = filtr( Color.FromArgb(buffer[(i << 2) + 3], buffer[(i << 2) + 2], buffer[(i << 2) + 1], buffer[i << 2]));
-                    buffer[i << 2] = c.B;
-                    buffer[(i << 2) + 1] = c.G;
-                    buffer[(i << 2) + 2] = c.R;
-                    //byte intencity = (byte)((buffer[i << 2] + buffer[(i << 2) + 1] + buffer[(i << 2) + 2])/3);
-                    //buffer[i << 2] = buffer[(i << 2) + 1] = buffer[(i << 2) + 2] = intencity;
-                }
+                if (isBlackAndWhite)
+                    for (int i = 0; i < l; i++)
+                        buffer[(i << 2) + 2] = buffer[(i << 2) + 1] = buffer[i << 2] = blueLink(buffer[(i << 2) + 2], buffer[(i << 2) + 1], buffer[i << 2]);
+                else                
+                    for (int i = 0; i < l; i++)
+                    {
+                        buffer[i << 2] = blueLink(buffer[(i << 2) + 2], buffer[(i << 2) + 1], buffer[i << 2]);
+                        buffer[(i << 2) + 1] = greenLink(buffer[(i << 2) + 2], buffer[(i << 2) + 1], buffer[i << 2]);
+                        buffer[(i << 2) + 2] = redLink(buffer[(i << 2) + 2], buffer[(i << 2) + 1], buffer[i << 2]);
+                        //byte intencity = (byte)((buffer[i << 2] + buffer[(i << 2) + 1] + buffer[(i << 2) + 2])/3);
+                        //buffer[i << 2] = buffer[(i << 2) + 1] = buffer[(i << 2) + 2] = intencity;
+                    }
+                
                 var bdi = img.LockBits(
                     new Rectangle(xFrom, yFrom, xTo - xFrom, yTo - yFrom),
                     ImageLockMode.WriteOnly,
@@ -90,7 +94,7 @@ namespace Kontur.ImageTransformer
                 Marshal.Copy(buffer, 0, bdi.Scan0, buffer.Length);
                 //Bitmap img = new Bitmap(xTo - xFrom, yTo - yFrom, (xTo - xFrom)<<2, System.Drawing.Imaging.PixelFormat.Format32bppArgb,bd.Scan0);                
 
-                img.Save("newpng.png", System.Drawing.Imaging.ImageFormat.Png);
+                //img.Save("newpng.png", System.Drawing.Imaging.ImageFormat.Png);
                 //listenerContext.Response.ContentEncoding = listenerContext.Request.ContentEncoding;
                 img.Save(listenerContext.Response.OutputStream, System.Drawing.Imaging.ImageFormat.Png);
                 //listenerContext.Response.AppendHeader("ContentType", "image/png");
@@ -108,7 +112,7 @@ namespace Kontur.ImageTransformer
         }
 
         delegate Color filter(Color c);
-        delegate int link(Color c);
+        delegate byte link(byte r,byte g,byte b);
 
         private int HandleWithFilter(int x, int y, int w, int h, HttpListenerContext listenerContext)
         {
