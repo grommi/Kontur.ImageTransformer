@@ -70,11 +70,11 @@ namespace Kontur.ImageTransformer
                     }
                 }
                 
-                image.Save("newpng.png", System.Drawing.Imaging.ImageFormat.Png);
-                listenerContext.Response.ContentEncoding = listenerContext.Request.ContentEncoding;
+                //image.Save("newpng.png", System.Drawing.Imaging.ImageFormat.Png);
+                //listenerContext.Response.ContentEncoding = listenerContext.Request.ContentEncoding;
                 image.Save(listenerContext.Response.OutputStream, System.Drawing.Imaging.ImageFormat.Png);
-                listenerContext.Response.AppendHeader("ContentType", "image/png");
-                listenerContext.Response.ContentType = "image/png";
+                //listenerContext.Response.AppendHeader("ContentType", "image/png");
+                //listenerContext.Response.ContentType = "image/png";
                 return 200;
             }
             else{

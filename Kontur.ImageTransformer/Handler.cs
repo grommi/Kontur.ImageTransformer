@@ -14,7 +14,7 @@ namespace Kontur.ImageTransformer
         private Handler()
         {
             NumberOfHandledRequests = 0;
-            handlerLogic = new SimpleLogic();
+            handlerLogic = new MediumLogic();
         }
         public static Handler GetInstance()
         {
@@ -26,7 +26,7 @@ namespace Kontur.ImageTransformer
         }
         private readonly IHandlerLogic handlerLogic;
         private int NumberOfHandledRequests;
-        private const int maxNumberOfHandledRequests = 16;
+        private const int maxNumberOfHandledRequests = 1;
         public void Handle(HttpListenerContext listenerContext)
         {
             if (NumberOfHandledRequests > maxNumberOfHandledRequests)
