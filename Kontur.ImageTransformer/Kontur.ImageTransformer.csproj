@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HardLogic.cs" />
     <Compile Include="MediumLogic.cs" />
     <Compile Include="Handler.cs" />
     <Compile Include="EntryPoint.cs" />
