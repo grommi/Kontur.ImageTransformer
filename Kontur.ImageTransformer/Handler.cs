@@ -26,7 +26,7 @@ namespace Kontur.ImageTransformer
         }
         private readonly IHandlerLogic handlerLogic;
         private int NumberOfHandledRequests;
-        private const int maxNumberOfHandledRequests = 1;
+        private const int maxNumberOfHandledRequests = 16;
         public void Handle(HttpListenerContext listenerContext)
         {
             if (NumberOfHandledRequests > maxNumberOfHandledRequests)
@@ -79,7 +79,7 @@ namespace Kontur.ImageTransformer
             listenerContext.Response.ContentType = listenerContext.Request.ContentType;
             //todo keep-alive?            
             listenerContext.Response.KeepAlive = listenerContext.Request.KeepAlive;
-
+            
             listenerContext.Response.Close();
             
         }

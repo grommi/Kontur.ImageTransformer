@@ -91,8 +91,11 @@ namespace Kontur.ImageTransformer
         {
 
             Console.WriteLine("request received");
+            ThreadPool.SetMinThreads(4, 4);
+            
             Handler handler = Handler.GetInstance();
-            handler.Handle(listenerContext);
+            await Task.Run(()=>handler.Handle(listenerContext));
+            
         }
 
         private readonly HttpListener listener;
