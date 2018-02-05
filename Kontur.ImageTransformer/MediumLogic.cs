@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 namespace Kontur.ImageTransformer
 {
@@ -45,11 +46,13 @@ namespace Kontur.ImageTransformer
             try
             {
                 bmp = new Bitmap(listenerContext.Request.InputStream);
+                //bmp = (Bitmap)Image.FromStream(listenerContext.Request.InputStream);
             }
             catch
             {
                 return 400;
             }
+            
             
             int leftPoint = (w >= 0) ? x : x + w;
             int upperPoint = (h >= 0) ? y : y + h;
@@ -121,12 +124,14 @@ namespace Kontur.ImageTransformer
                 img.UnlockBits(bdi);
                 bmp.UnlockBits(bd);
                 //img.Save("newpng.png", System.Drawing.Imaging.ImageFormat.Png);
-                
+                //MemoryStream inMemory = new MemoryStream();
                 img.Save(listenerContext.Response.OutputStream, System.Drawing.Imaging.ImageFormat.Png);
-                
-               
-                
-                
+                //byte[] buffr = inMemory.GetBuffer();
+                //inMemory.Close();
+                //listenerContext.Response.OutputStream.Write(buffr, 0, buffr.Length);
+
+
+                //Console.WriteLine("200 OK");
                 return 200;
             }
             else

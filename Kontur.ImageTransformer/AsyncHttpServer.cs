@@ -72,7 +72,17 @@ namespace Kontur.ImageTransformer
                     if (listener.IsListening)
                     {
                         var context = listener.GetContext();
-                        Task.Run(() => HandleContextAsync(context));
+                        //Console.WriteLine(Handler.NumberOfHandledRequests);
+                        if (Handler.NumberOfHandledRequests > 50)
+                        {
+                            context.Response.StatusCode = 429;
+                            context.Response.Close();
+                        }
+                        else
+                        {
+                            Handler.NumberOfHandledRequests++;
+                            Task.Run(() => Handler.Handle(context));
+                        }                        
                     }
                     else Thread.Sleep(0);
                 }
@@ -82,22 +92,11 @@ namespace Kontur.ImageTransformer
                 }
                 catch (Exception error)
                 {
+                    Console.WriteLine("exeption");
                     // TODO: log errors
                 }
             }
         }
-
-        private async Task HandleContextAsync(HttpListenerContext listenerContext)
-        {
-
-            Console.WriteLine("request received");
-            ThreadPool.SetMinThreads(4, 4);
-            
-            Handler handler = Handler.GetInstance();
-            await Task.Run(()=>handler.Handle(listenerContext));
-            
-        }
-
         private readonly HttpListener listener;
 
         private Thread listenerThread;
